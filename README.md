@@ -1,2 +1,2 @@
-# movie_recommendation_system
-CSE 547 project: A movie recommendation system for the Netflix Prize challenge.
+# CSE 547 Project: Movie Recommendation System
+A movie recommendation system for the Netflix Prize challenge.
