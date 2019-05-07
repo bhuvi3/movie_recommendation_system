@@ -1,9 +1,14 @@
+#!/usr/bin/env python
+# coding: utf-8
+
 import os
+from collections import defaultdict
 from io import BytesIO
+from PIL import Image
 
 import pandas as pd
+import pickle
 import requests
-from PIL import Image
 
 
 class ImageFetcher:
@@ -108,3 +113,35 @@ class ImageFetcher:
         for url in urls:
             output_filepath = self._url_to_filepath(url)
             self._download_image(url, output_filepath)
+
+
+def create_ratings_matrix(ratings_file, outfile, sep=','):
+    """
+    Creates a ratings from the ratings file and returns a dictionary containing ratings matrix
+    for optimized sparse storage.
+
+    Assumes that the data csv file has a header and data in format: "user_id,movie_id,rating,timestamp\n"
+    (MovieLens data format).
+
+    """
+    fp = open(ratings_file)
+    header = fp.readline()
+    ratings_mat = defaultdict(dict)
+    users = set()
+    movies = set()
+    for line in fp:
+        user_id, movie_id, rating, _ = line.strip().split(sep)
+        user_id = int(user_id)
+        movie_id = int(movie_id)
+        users.add(user_id)
+        movies.add(movie_id)
+        ratings_mat[user_id][movie_id] = rating
+
+    fp.close()
+    print("Number of unique users: %s, range: [%s, %s]" % (len(users), min(users), max(users)))
+    print("Number of unique movies: %s, range: [%s, %s]" % (len(movies), min(movies), max(movies)))
+
+    with open(outfile) as out_fp:
+        pickle.dump(ratings_mat, out_fp)
+
+    print("The ratings sparse matrix has been saved in %s" % outfile)
