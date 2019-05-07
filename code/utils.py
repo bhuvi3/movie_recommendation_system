@@ -71,8 +71,7 @@ class ImageFetcher:
         """
         data_file = pd.read_csv(self._data_file_path)
         url_column = data_file[self._url_column_name]
-        urls = url_column.values.tolist()[:5]
-        print(urls)
+        urls = url_column.values.tolist()
         
         if self._url_prefix:
             urls = [self._url_prefix + url for url in urls]
@@ -104,7 +103,6 @@ class ImageFetcher:
         Download images and saves them to the folder.
         
         """
-        
         urls = self._get_urls()
         
         for url in urls:
