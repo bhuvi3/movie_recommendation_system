@@ -15,11 +15,13 @@ import requests
 class ImageFetcher:
     """
     Pulls images from url present in a csv file and dumps them into a folder.
+    Creates two text files consisting a list of successfully downloaded and 
+    failed urls.
     
     """
     
     def __init__(self, data_file_path, url_column_name, output_file_name_column, output_folder_path, 
-                 output_postfix=None, url_prefix=None, max_attempts=5):
+                 output_postfix=None, url_prefix=None):
         """
         Just your standard class initialization. 🤷
         
@@ -31,23 +33,20 @@ class ImageFetcher:
         output_folder_path (str): Path to the output folder where the images need to be dumped.
         output_postfix (str): Postfix string appended to the output file.
         url_prefix (str): Base URL string.
-        max_attempts(int): Maximum number of attempts to fetch the file.
         
         """
-        self._data_file_path = data_file_path
-        self._data_file_path = data_file_path 
+        self._data_file_path = os.path.abspath(data_file_path)
         self._url_column_name = url_column_name
         self._output_file_name_column = output_file_name_column
-        self._output_folder_path = output_folder_path   
+        self._output_folder_path = os.path.abspath(output_folder_path)
         self._url_prefix = url_prefix
-        self._max_attempts = max_attempts
         
         if not output_postfix:
             self._output_postfix = ''
         else:
             self._output_postfix = '_' + output_postfix 
 
-    def _download_image(self, url, image_file_path, attempt=0):
+    def _download_image(self, url, image_file_path):
         """
         Downloads the image and dumps to a file.
 
@@ -56,17 +55,19 @@ class ImageFetcher:
         url (str): URL to the image which needs to be downloaded.
         image_file_path (str): Path to the output file.
 
+        Output:
+        --------
+        successful (boolean): Flag for successful or failed download.
+
         """
         r = requests.get(url)
         if r.status_code != requests.codes.ok:
-            if attempt < self._max_attempts:
-                self._download_image(url, image_file_path, attempt + 1)
-                return
-            else:
-                assert False, f'Status code error while downloading %s: %s.'%(url, r.status_code)
+            return False
 
         with Image.open(BytesIO(r.content)) as im:
             im.save(image_file_path)
+        
+        return True
             
     def _get_metadata(self):
         """
@@ -115,13 +116,35 @@ class ImageFetcher:
     
     def fetch_images(self):
         """
-        Download images and saves them to the folder.
+        Download images and saves them to the folder. Creates two text 
+        files consisting a list of successfully downloaded and failed urls.
         
         """
+        successful_filename = os.path.join(self._output_folder_path, 
+                                           self._output_postfix[1:] + '.txt')
+        failed_filename = os.path.join(self._output_folder_path, 
+                                       self._output_postfix[1:] + '_failed.txt')
+
+        successful_list = []
+        failed_list = []
+
         metadata = self._get_metadata()
         
         for output_filepath, url in metadata:
-            self._download_image(url, output_filepath)
+            successful = self._download_image(url, output_filepath)
+            if successful:
+                successful_list.append(output_filepath)
+            else:
+                failed_list.append((output_filepath, url))
+        
+        with open(successful_filename, 'w') as f:
+            for item in successful_list:
+                f.write("%s\n" % item)
+        
+        with open(failed_filename, 'w') as f:
+            for item in failed_list:
+                f.write("%s\n" % item)
+
 
 
 def create_ratings_matrix(ratings_file, outfile, sep=','):
