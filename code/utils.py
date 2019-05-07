@@ -161,4 +161,3 @@ def create_ratings_matrix(ratings_file, outfile, sep=','):
         pickle.dump(ratings_mat, out_fp)
 
     print("The ratings sparse matrix has been saved in %s" % outfile)
-
