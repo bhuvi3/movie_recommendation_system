@@ -85,7 +85,7 @@ class ImageFetcher:
         subset_data = subset_data.dropna()
         final_data = subset_data[subset_data[self._url_column_name].astype(str).str.match("\/.+\.[a-zA-Z]+")]
         
-        for filename, url in final_data.values:
+        for filename, url in final_data.values.tolist():
             filename = self._url_to_filepath(filename, url)
             if self._url_prefix:
                 url = self._url_prefix + url
