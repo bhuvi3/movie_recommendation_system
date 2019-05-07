@@ -17,8 +17,8 @@ class ImageFetcher:
     
     """
     
-    def __init__(self, data_file_path, url_column_name, output_folder_path, output_postfix=None, 
-                 url_prefix=None, max_attempts=5):
+    def __init__(self, data_file_path, url_column_name, output_file_name_column, output_folder_path, 
+                 output_postfix=None, url_prefix=None, max_attempts=5):
         """
         Just your standard class initialization. 🤷
         
@@ -26,6 +26,7 @@ class ImageFetcher:
         -------
         data_file_path (str): Path to the csv file which contains the URLs. 
         url_column_name (str): Name of the column in the csv file which contains the URLs.
+        output_file_name_column (str): Name of the column in the csv file which contains the output file name.
         output_folder_path (str): Path to the output folder where the images need to be dumped.
         output_postfix (str): Postfix string appended to the output file.
         url_prefix (str): Base URL string.
@@ -34,7 +35,8 @@ class ImageFetcher:
         """
         self._data_file_path = data_file_path
         self._data_file_path = data_file_path 
-        self._url_column_name = url_column_name 
+        self._url_column_name = url_column_name
+        self._output_file_name_column = output_file_name_column
         self._output_folder_path = output_folder_path   
         self._url_prefix = url_prefix
         self._max_attempts = max_attempts
@@ -65,30 +67,38 @@ class ImageFetcher:
         with Image.open(BytesIO(r.content)) as im:
             im.save(image_file_path)
             
-    def _get_urls(self):
+    def _get_metadata(self):
         """
-        Reads the csv file and returns a list of all the URLs after prepending base path.
+        Reads the csv file and returns a list of all the URLs after prepending base path 
+        and filenames after appending the postfix string.
         
         Output:
         --------
-        urls (list): List of URLs.
+        metadata (list): List of tuples of filenames, URLs.
         
         """
-        data_file = pd.read_csv(self._data_file_path)
-        url_column = data_file[self._url_column_name]
-        urls = url_column.values.tolist()
+        metadata = []
+
+        data_file = pd.read_csv(self._data_file_path, dtype=str)
+        subset_data = data_file[[self._output_file_name_column, self._url_column_name]]
+        subset_data = subset_data.dropna()
+        final_data = subset_data[subset_data[self._url_column_name].astype(str).str.match("\/.+\.[a-zA-Z]+")]
         
-        if self._url_prefix:
-            urls = [self._url_prefix + url for url in urls]
+        for filename, url in final_data.values:
+            filename = self._url_to_filepath(filename, url)
+            if self._url_prefix:
+                url = self._url_prefix + url
+            metadata.append((filename, url))
         
-        return urls
+        return metadata
     
-    def _url_to_filepath(self, url):
+    def _url_to_filepath(self, filename, url):
         """
-        Extracts filename from URL and returns the output path after appending the postfix string.
+        Extracts extension from URL and returns the output path after appending the postfix string and extension.
         
         Input:
         -------
+        filename (str): Filename for the image.
         url (str): URL of the image.
         
         Output:
@@ -97,7 +107,6 @@ class ImageFetcher:
         
         """
         filepath, ext = os.path.splitext(url)
-        filename = os.path.split(filepath)[1]
         
         filepath = os.path.join(self._output_folder_path, filename + self._output_postfix + ext)
         
@@ -108,10 +117,9 @@ class ImageFetcher:
         Download images and saves them to the folder.
         
         """
-        urls = self._get_urls()
+        metadata = self._get_metadata()
         
-        for url in urls:
-            output_filepath = self._url_to_filepath(url)
+        for output_filepath, url in metadata:
             self._download_image(url, output_filepath)
 
 
