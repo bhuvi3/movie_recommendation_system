@@ -6,6 +6,7 @@ from collections import defaultdict
 from io import BytesIO
 from PIL import Image
 
+import numpy as np
 import pandas as pd
 import pickle
 import requests
@@ -126,22 +127,30 @@ def create_ratings_matrix(ratings_file, outfile, sep=','):
     """
     fp = open(ratings_file)
     header = fp.readline()
+
     ratings_mat = defaultdict(dict)
     users = set()
     movies = set()
+    ratings_count = 0
     for line in fp:
+        ratings_count += 1
         user_id, movie_id, rating, _ = line.strip().split(sep)
         user_id = int(user_id)
         movie_id = int(movie_id)
         users.add(user_id)
         movies.add(movie_id)
-        ratings_mat[user_id][movie_id] = rating
+        rating = float(rating)
+        if rating > 5:
+            raise ValueError("The rating cannot be greater than 5.0: %s" % rating)
+        ratings_mat[user_id][movie_id] = np.float16(rating)
 
     fp.close()
-    print("Number of unique users: %s, range: [%s, %s]" % (len(users), min(users), max(users)))
-    print("Number of unique movies: %s, range: [%s, %s]" % (len(movies), min(movies), max(movies)))
+    print("Number of ratings: %d" % ratings_count)
+    print("Number of unique users: %d, range: [%d, %d]" % (len(users), min(users), max(users)))
+    print("Number of unique movies: %d, range: [%d, %d]" % (len(movies), min(movies), max(movies)))
 
-    with open(outfile) as out_fp:
+    with open(outfile, "wb") as out_fp:
         pickle.dump(ratings_mat, out_fp)
 
     print("The ratings sparse matrix has been saved in %s" % outfile)
+

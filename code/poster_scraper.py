@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# coding: utf-8
+
 from utils import ImageFetcher
 
 # Pulls posters to all the movies using the links present in 'movie_metadata.csv'.
