@@ -1,0 +1,194 @@
+\documentclass{article}
+
+% if you need to pass options to natbib, use, e.g.:
+%     \PassOptionsToPackage{numbers, compress}{natbib}
+% before loading neurips_2019
+
+% ready for submission
+% \usepackage{neurips_2019}
+
+% to compile a preprint version, e.g., for submission to arXiv, add add the
+% [preprint] option:
+%     \usepackage[preprint]{neurips_2019}
+
+% to compile a camera-ready version, add the [final] option, e.g.:
+\usepackage[preprint]{neurips_2019}
+
+% to avoid loading the natbib package, add option nonatbib:
+%     \usepackage[nonatbib]{neurips_2019}
+
+\usepackage{float}
+\usepackage[utf8]{inputenc} % allow utf-8 input
+\usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+\usepackage{hyperref}       % hyperlinks
+\usepackage{url}            % simple URL typesetting
+\usepackage{booktabs}       % professional-quality tables
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{microtype}      % microtypography
+
+\title{Project Proposal: Hybrid Model for Movie Recommendation}
+
+\author{%
+  Bhuvan M S \\
+  \texttt{msbhuvan@uw.edu}
+  \AND
+  Darshan Mehta \\
+  \texttt{darshanm@uw.edu}
+  \AND
+  Yash Kale \\
+  \texttt{yashkale@uw.edu}
+}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+Movie recommendation systems are widely used on movie database websites like IMDB, TMDB and Rotten Tomatoes, and on popular services like Netflix, Amazon Prime and Hulu. This is common problem which has been addressed from different perspectives like predicting accurate ratings, solving the cold-start problems for users, and addressing popularity bias. However, most of the approaches work on either the ratings matrix or the movie metadata information or both. But there has not been emphasis on movie recommendation based on the movie poster or the synopsis of the movie plot provided in the online movie databases. We hypothesize that the probability of an user watching a specific movie is a complex function of various features like the ratings the user for similar movies, ratings of similar users for the movie, various content based features of the movie like the runtime, language, cast and also the textual summary of the plot and the poster used for the movie. Therefore, in this project, we explore a hybrid recommendation system which models each of the above mentioned aspects of the movie to predict the ratings for a user-movie pair.
+
+We approach to build such a hybrid model as an ensemble of various methods like item-based collaborative filtering (CF-I), user-based collaborative filtering (CF-U), Latent Factor Model (LFM), content-based model (CB), Plot (synopsis of the movie) based model (PLT) and Poster based model (POS). We plan to explore how to combine the predictions from these models to get a final ratings for a user-movie pair. Also, we explore to understand how useful are each of the models to address each specific issue like cold-start problems for new user, unique tastes of user and recommending new/unpopular movies and recommendations for specific genres. This would result in a summary of the models which are effective in catering to specific issues. For this task, we chose to work on one of the biggest movie recommendation dataset available online, which could help us in evaluating effectively.
+
+
+\section{Literature Review}
+This section includes a review of the research works related representing of image data and natural language data for recommendation purposes, and a summary from the review of the state-of-the-art hybrid recommendation systems.
+
+Tuinhof et al. [2] propose a two-stage deep learning framework for recommending fashion products based on an input picture. They use two deep convolutional neural networks which have been pre-trained on a large product database and fine tune it for their dataset. One of these predict the category and the other predicts texture type. They then concatenate the values from the second last layer of both of these networks and use it as a feature representation of the image content. They use k-NN to search for the closest item in their dataset.
+While their feature extraction process seems to be astute, the k-NN model which runs on top of these features can get out of hand really quick as the data size increases. This is especially a problem when recommending in real-time. Hence, we propose to use Locality Sensitive Hashing (LSH) on top of the features extracted from the posters which would reduce the time complexity significantly.
+
+Bergamaschi et al. [3] use topic models from the summary of the 'plot' associated with each movie. They use a content-based recommendation system which evaluates the similarity between the plot of the movie with the plots of other movies in the dataset. Therefore, this method is independent of user ratings due to which it wouldn't have popularity bias issue.We emphasize on the representation of the plot text detailed in this paper. Each plot text is preprocessed by removing stop-words and lemmatization the words, and vectorized using TF-IDF technique [6]. Further, dimensionality reduction is performed by topic modeling methods like Latent Dirichlet Allocation (LDA) [7] and an Singular Value Decomposition (SVD) based approach called Latent Semantic Analysis (LSA) [8]. The similarity of the movies are assessed based on cosine similarity score taken over the topic space defined by LDA or LSA. The authors suggested that the cost of computation of LDA matrix is lesser compared to LSA (both time and space). However, based on evaluation by a set of users, the authors found that the quality of topics and the recommendations generated by features extracted by LSA are compared to that of LDA. Therefore, this paper helped us in choosing LSA as the dimensionality reduction method to be used on our plot-text data in our content-based model.
+
+Viktoriia et al. [4] classify hybridization into 7 major categories defined as follows:
+\begin{itemize}
+    \item \textbf{Weighted}: implementing different methods separately and then combining their predictions.
+    \item \textbf{Switching}: certain switching criterion is used by the system to interchange between two recommender systems operating on the same object.
+    \item \textbf{Feature Combination}: features from different recommender systems data sources are put into a single recommendation algorithm. 
+    \item \textbf{Cascading}: one recommender system refines the results given by another. 
+    \item \textbf{Feature Augmentation}: the output of one system is used as an input feature to another, for example, using the model generated by one to generate features that are used by another. 
+    \item \textbf{Meta Level}: a model learned by one recommendation is used as input to another. Its difference from Feature Augmentation is that the entire model is used as input. 
+    \item \textbf{Mixed}: incorporates two or more techniques at the same time, e.g.: Content-based and Collaborative Filtering. 
+\end{itemize}
+They compare and contrast several state-of-the-art papers in order to understand which of these hybridization techniques work better. In their findings, they claim that Weighted hybridization of Content-based and Collaborative Filtering models are by far the most popular technique. They also found that many papers took a fuzzy set approach to things which seems like a reasonable thing to do given the inherent uncertainty in the real-world data today. Similar to the papers reviewed by the authors, we plan to try how different combinations of models improve the recommendations in different scenarios. We plan to perform an exhaustive study of these combinations over different sections of our user base to gain a better intuition.
+
+
+\section{Problem Statement and Objectives}
+We choose a common problem of movie recommendation based on multiple data attributes. Though this is a common problem, it is highly impactful in the real-world since it is used in some of the most popular services like Netflix, Amazon Prime, Hulu etc. We plan to take a hybrid approach to this problem by not only using ratings and content-based information like the metadata of the movie, but also to include the unstructured text data from the producers i.e, the published plot and synopsis of the movie, and the subjective reviews of the users as described in the data description section below. In short, we aim to recommend 20 movies to each user, which have the highest probability (ratings) of liking by the user. We will try to extend the the problem by using the poster cover of the movie also as another indicative in the extension of the work.
+
+\section{Data Description}
+#For this project, we aim to combine multiple datasets on movies to get a rich set of features on movies. A few datasets that we aim to explore and combine are the Netflix Prize dataset [4], the MovieLens dataset [5], and the IMDB movies dataset [6]. The Netflix dataset [4] contains CustomerID, MovieID, and Rating. Such a dataset in itself is quite primitive in content. It does not contain enough data which could ideally help in judging the similarity of movies and user preference. It could be the case that the user only watches action movies in a certain language or which has a certain cast. Such features are quite important in understanding the user’s preference and are lacking in the Netflix dataset [4].  We aim to improve  this dataset with the information obtained from the other datasets. The IMDB dataset [6] provides us metadata on the movie such as the year it was released, genre, number of awards won, IMDB rating, duration of the movie, etc. The MovieLens dataset [5] provides us with even more detailed metadata such as the list of the cast and the crew, budget, revenue, languages spoken in the movie, link to the imdb poster, IMDB ID, and the plot synopsis. These datasets when combined together provide us much more features to measure the similarity of the movies on leading to better recommendations. We also plan to gather the features extracted from the poster and the plot of the movies (and potentially the reviews) and use them to compute similarity as well. 
+
+\subsection{Data Collection and Summary Statistics}
+Initially, the data was to be collected from 3 different sources. The sources were the Netflix Prize dataset, the MovieLens dataset, and the IMDB movie dataset. However, we found a dataset, the TMDB dataset which gives us all the information across the three datasets. The TMDB dataset contains information which contains the following features:
+adult: Whether a movie has an adult rating or not
+Genres: Which genre the film lies in. It can be a combination of genres.
+original language: The language in which the film is shot in.
+original title: The title of the movie
+overview: The summary/plot of the movie
+popularity: Describes how popular a movie is on a scale of 1-100.
+poster path: Gives the URL to the posters of the movie.	
+production companies: The name of the company which produced the movie
+production countries: The country in which the movie was produced.
+release date: The exact date on which the movie was released.
+runtime: The duration of the movie
+spoken languages: What languages were spoken other than the original language.
+tagline: The tagline of the movie
+title: The title given to the movie
+vote average: The average rating given for the movie.
+vote count: The total number of votes given to the movie.
+cast: This involves the names of the actors and actresses involved in the movie
+crew: This involves the names of all those involved in making of the movie, like the producers, directors, cameramen and so on.
+
+Summary Statistics:
+
+\begin{enumerate}
+\item Adult: There are 45454 False values and 9 True values. The remaining three values are the plots of the movies, which are present due to an error in data entry.
+\item Genres: There 4096 different combinations of genres in the dataset for representation for each movie, with the genre 'Drama' being the most frequent one. 
+\item original language: There are 89 different languages in which movies are produced.
+\item original title: Story,Night, 'la', Life,Last,'Les',Dead,Christmas,House,World are some of the words which are the most frequent in the titles of the movies.
+\item overview:
+\item popularity: Here we see that minimum value for the popularity of a movie is 0, whereas the highest popularity for a movie is 547. It has a mean score of 2.92
+\item production companies: There are 22708 different companies that have produced movies
+\item production countries: There 2393 different countries in which movies have  been produced.
+\item release date: There are 17336 different days on which movies have been produced.  
+\item runtime: On an average, a movie runs for 94 minutes. The longest movie in the dataset runs for 1256 minutes.
+\item spoken languages: There are a total of 1931 different combinations of languages used as spoken languages in movies, with English being the most frequent one.
+\item vote average: The minimum rating given to a movie is 0, while the maximum rating given to a movie is 10. On an average, a rating of 6 is given to a movie.
+\item vote count: There are movies which have never been voted on. Hence the minimum vote count is  0. The maximum number of times a movie has been voted is 14075 times, where as on an average a movie has been voted on 10 times.
+\end{enumerate}
+
+
+
+\subsection{Data Preprocessing}
+We see that there is a lot of missing data in the dataset. Some features also do not contribute in any manner, which need to be removed. The adult feature as mentioned above, barely contains any movies that have been rated as adult movies.
+The budget and revenue features majorly contain zeroes, which makes these features redundant. A lot of movies contain multiple spoken languages, they may classify under multiple genres and even might have been produced in different countries. For each movie, we plan to convert these features as one hot vectors. For example, if a movie comes under genres like Drama, Action and Comedy, we would represent the genre features as a one hot encoded vector with ones for Drama, Action and Comedy and zeroes for other genres. The popularity scores currently are not standardized. We would standardize these values for a better understanding of the feature. There is a another feature which states the exact date of release of the movie. We plan to bucket this feature in terms of the decade in which the movie was released.
+
+\subsection{Initial Findings from Exploratory Analysis}
+
+\begin{enumerate}
+    \item Genres: We observe that majority of the movies were of the following genres: Drama, Comedy, Thriller, Romance and Action.
+\item 3. original language: Around 70\% of the movies have been shot in the English language. English, French, Italian, Japanese and German languages account for around 85\% of the movies in total.
+\item 7. production companies: The top production companies in terms of movies produced are: MGM, Warner Bros, Paramount Pictures, Twentieth Century Fox and Universal Pictures.
+\item 8. production countries: The top countries in which the maximum number of movies are produced are: United States of America, United Kingdom, France, Japan and Italy.
+\item 9. revenue: We find that around 84\% of the movies have a revenue ofntime: We find that the average movie is 94 minutes long.
+\end{enumerate}
+
+
+\section{Challenges}
+\subsection{Data Quality Challenges}
+As discussed in the above section, there is always the issue of missing data. And it is not always possible to impute those values or drop those rows. For example, we found that some of the movies do not have a poster available. In such a scenario, the hybrid ensemble model wouldn't receive any recommendation from the POS model. We must make sure that the ensemble doesn't treat the missing data in a negative manner.
+
+\subsection{Cold Start Problem}
+One of the most common challenges of any recommendation system is the Cold Start problem. This can be with respect to both users and movies. When a new user joins the platform, the recommendation system has no prior data on the user's preferences and so recommending a movie to the user is more challenging. Similarly, when a new movie is released or added to the platform, we need to make sure that is it being recommended to the correct users since otherwise the movie will never be watched or rated. This is closely related to the popularity bias problem where we fail in recommending niche items to the users.
+
+\subsection{Curse of Combinatorics}
+
+
+\subsection{Large n, Larger d}
+
+\section{Proposed Methodology}
+We propose a hybrid model to predict the ratings for each user-movie pair. Firstly, we randomly hold-out 30\% of the user-movie rating pairs as an unseen test set. All the evaluation is to be performed on the test-set. Therefore, for building our models, we only use the train-set rating matrix.
+# TODO: Test set and train set details
+
+We build 7 different models from our data containing various aspects. Each model would predict a rating (real number from 0 to 5) for each user-movie pair. An ensemble model would then aggregate the ratings from each model to give a final rating for each user-movie pair.
+
+
+\subsection{Evaluation Details}
+We will consider an unseen test test which would be held-out at the beginning which is a subset of ratings data containing 20\% of the total users. The ground truth will contain ‘true’ (to represent whether the user actually watches it or not) for the top 20 movies based on the ratings provided by the users, and ‘false’ for all other movies. The recommendation method proposed would find top 20 movies, and these ten movies would have ‘true’ and the rest would have ’false’. We shall use the the area under ROC (Receiver Operating Characteristic) curve as the primary metric. As a secondary metric, we would consider to use the Spearman correlation (rank correlation) on the predicted top 20 movies versus actual top 20 movies.
+
+\subsection{Review of Relevant Algorithms and Mathematical Background}
+Collaborative Filtering: Both Item based nad User based.
+
+latent Factor model:
+
+SVD
+
+LSH
+
+
+
+\section{Plan for Project Completion}
+We aim to implement the proposed hybrid method with highly computationally intensive parts on Spark, and get an evaluation score for the primary and secondary evaluation metric explained above. We plan to compare our results with the simple item-item collaborative recommendation method and the content-based recommendation method, and the latent-factor recommendation method.
+
+\subsection{Extension of the Project}
+
+
+\section*{References}
+\small
+[1] Banik, Rounak. The Movies Dataset. 10 Nov. 2017, www.kaggle.com/rounakbanik/the-movies-dataset. Accessed 25 Apr. 2019.
+
+[2] Tuinhof, Hessel, Clemens Pirker, and Markus Haltmeier. "Image-Based Fashion Product Recommendation with Deep Learning." International Conference on Machine Learning, Optimization, and Data Science. Springer, Cham, 2018.
+
+[3] Bergamaschi, Sonia, and Laura Po. "Comparing lda and lsa topic models for content-based movie recommendation systems." International Conference on Web Information Systems and Technologies. Springer, Cham, 2014.
+
+[4] Danilova, Viktoriia. “Hybrid Recommender Systems : The Review of State-of-the-Art Research and Applications.” (2017).
+
+[5] current best result on our data paper
+
+% methods related references
+[6] tfidf
+
+[7] LDA
+
+[8] LSA
+
+\end{document}
