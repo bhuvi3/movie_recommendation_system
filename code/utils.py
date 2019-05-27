@@ -17,12 +17,12 @@ class ImageFetcher:
     """
     Pulls images from url present in a csv file and dumps them into a folder.
     Creates two text files consisting a list of successfully downloaded and 
-    failed urls.
+    failed urls. Allows resizing of images.
     
     """
     
     def __init__(self, data_file_path, url_column_name, output_file_name_column, output_folder_path, 
-                 output_postfix=None, url_prefix=None):
+                 output_postfix=None, url_prefix=None, resize_shape=None):
         """
         Just your standard class initialization. 🤷
         
@@ -34,6 +34,7 @@ class ImageFetcher:
         output_folder_path (str): Path to the output folder where the images need to be dumped.
         output_postfix (str): Postfix string appended to the output file.
         url_prefix (str): Base URL string.
+        resize_shape(tuple): Shape to which image needs to be resized. Preserves original size if set to None.
         
         """
         self._data_file_path = os.path.abspath(data_file_path)
@@ -41,6 +42,7 @@ class ImageFetcher:
         self._output_file_name_column = output_file_name_column
         self._output_folder_path = os.path.abspath(output_folder_path)
         self._url_prefix = url_prefix
+        self._resize_shape = resize_shape
         
         if not output_postfix:
             self._output_postfix = ''
@@ -66,6 +68,8 @@ class ImageFetcher:
             return False
 
         with Image.open(BytesIO(r.content)) as im:
+            if self._resize_shape:
+                im = im.resize(self._resize_shape, resample=Image.LANCZOS)
             im.save(image_file_path)
         
         return True
