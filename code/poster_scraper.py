@@ -12,11 +12,12 @@ url_column_name = 'poster_path'
 output_file_name_column = 'id'
 output_postfix = 'poster'
 url_prefix = 'https://image.tmdb.org/t/p/w600_and_h900_bestv2'
+resize_shape = (512, 512)
 
 
 # Initialize Fetcher
 image_fetcher = ImageFetcher(data_file_path, url_column_name, output_file_name_column, 
-                             output_folder_path, output_postfix, url_prefix)
+                             output_folder_path, output_postfix, url_prefix, resize_shape)
 
 # Fetch                             
 image_fetcher.fetch_images()
