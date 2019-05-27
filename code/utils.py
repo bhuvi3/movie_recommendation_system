@@ -9,6 +9,7 @@ from PIL import Image
 import numpy as np
 import pandas as pd
 import pickle
+import random
 import requests
 
 
@@ -155,6 +156,8 @@ def create_ratings_matrix(ratings_file, outfile, sep=','):
     Assumes that the data csv file has a header and data in format: "user_id,movie_id,rating,timestamp\n"
     (MovieLens data format).
 
+    Ratings matrix format: {'user_id': {'movie_id': rating, ...}, ...}
+
     """
     fp = open(ratings_file)
     header = fp.readline()
@@ -184,3 +187,65 @@ def create_ratings_matrix(ratings_file, outfile, sep=','):
         pickle.dump(ratings_mat, out_fp)
 
     print("The ratings sparse matrix has been saved in %s" % outfile)
+
+
+def get_ratings_mat_train_val_test_split(ratings_mat_pickle_file, outfile_prefix, val_split=0.15, test_split=0.25, random_state=None):
+    """
+    Creates the train, val and test split of the ratings matrix, and writes them
+    to in the path referred by outfile_prefix as
+    (<outfile_prefix>_train.pickle, <outfile_prefix>_val.pickle, <outfile_prefix>_test.pickle).
+
+    """
+    with open(ratings_mat_pickle_file, "rb") as fp:
+        ratings_mat = pickle.load(fp)
+
+    num_ratings_list = [len(v) for k, v in ratings_mat.items()]
+    total_ratings = sum(num_ratings_list)
+
+    val_size = int(val_split * total_ratings)
+    test_size = int(test_split * total_ratings)
+    train_size = total_ratings - (val_size + test_size)
+
+    print("train_size: %s" % train_size)
+    print("val_size: %s" % val_size)
+    print("test_size: %s" % test_size)
+
+    # 0: train_set, 1: val_set, 2: test_set
+    split_indicator = [0] * train_size + [1] * val_size + [2] * test_size
+
+    if random_state is not None:
+        print("Setting the random seed to %s" % random_state)
+        random.seed(random_state)
+
+    random.shuffle(split_indicator)
+
+    ratings_mat_train = defaultdict(dict)
+    ratings_mat_val = defaultdict(dict)
+    ratings_mat_train_val = defaultdict(dict)
+    ratings_mat_test = defaultdict(dict)
+
+    # Index to be considered from the split_indicator, starting from zero.
+    i = 0 
+    for user_id, movie_ratings in ratings_mat.items():
+        for movie_id, rating in movie_ratings.items():
+            split_ind = split_indicator[i]
+            if split_ind == 0:
+                ratings_mat_train[user_id][movie_id] = rating
+                ratings_mat_train_val[user_id][movie_id] = rating
+            if split_ind == 1:
+                ratings_mat_val[user_id][movie_id] = rating
+                ratings_mat_train_val[user_id][movie_id] = rating
+            if split_ind == 2:
+                ratings_mat_test[user_id][movie_id] = rating
+
+            i += 1
+
+    # Save them in pickle files.
+    for cur_rating_dict, cur_split_name in zip([ratings_mat_train, ratings_mat_val, ratings_mat_train_val, ratings_mat_test],
+                                               ["train", "val", "train_val", "test"]):
+        outfile = "%s_%s.pickle" % (outfile_prefix, cur_split_name)
+        with open(outfile, "wb") as out_fp:
+            pickle.dump(cur_rating_dict, out_fp)
+
+        print("%s ratings sparse matrix has been saved in %s" % (cur_split_name, outfile))
+

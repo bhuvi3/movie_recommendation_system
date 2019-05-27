@@ -1,0 +1,16 @@
+# This file contains some commands and outputs run during the Projects
+# data preparation.
+
+# 1. Creating the ratings matrix and the train, val, test splits.
+Number of ratings: 26024289
+Number of unique users: 270896, range: [1, 270896]
+Number of unique movies: 45115, range: [1, 176275]
+The ratings sparse matrix has been saved in ../data/ratings_mat.pickle
+train_size: 15614574
+val_size: 3903643
+test_size: 6506072
+Setting the random seed to 0
+train ratings sparse matrix has been saved in ../data/ratings_mat_train.pickle
+val ratings sparse matrix has been saved in ../data/ratings_mat_val.pickle
+train_val ratings sparse matrix has been saved in ../data/ratings_mat_train_val.pickle
+test ratings sparse matrix has been saved in ../data/ratings_mat_test.pickle
