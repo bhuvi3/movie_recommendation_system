@@ -134,6 +134,7 @@ class ImageFetcher:
         failed_list = []
 
         metadata = self._get_metadata()
+        idx = 0
         
         for output_filepath, url in metadata:
             successful = self._download_image(url, output_filepath)
@@ -141,6 +142,9 @@ class ImageFetcher:
                 successful_list.append(output_filepath)
             else:
                 failed_list.append((output_filepath, url))
+            idx += 1
+            if idx % 1000 == 0:
+                print(idx)  # for debug purpose
         
         with open(successful_filename, 'w') as f:
             for item in successful_list:
@@ -148,7 +152,7 @@ class ImageFetcher:
         
         with open(failed_filename, 'w') as f:
             for item in failed_list:
-                f.write("%s\n" % item)
+                f.write("%s\t%s\n" % item)
 
 
 
