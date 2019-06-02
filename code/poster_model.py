@@ -9,7 +9,7 @@ from keras.models import Model, Sequential
 
 def get_model():
     autoencoder = Sequential()
-    autoencoder.add(Conv2D(64, (7, 7), padding='same', input_shape=(512, 512, 3)))  # first conv layer
+    autoencoder.add(Conv2D(64, (7, 7), padding='same', input_shape=(256, 256, 3)))  # first conv layer
     autoencoder.add(BatchNormalization())
     autoencoder.add(LeakyReLU(alpha=0.1))
     autoencoder.add(MaxPooling2D((2, 2), padding='same'))
@@ -21,7 +21,7 @@ def get_model():
     autoencoder.add(BatchNormalization())
     autoencoder.add(LeakyReLU(alpha=0.1))
     autoencoder.add(MaxPooling2D((2, 2), padding='same'))
-    autoencoder.add(Conv2D(256, (3, 3), padding='same'))  # fourth conv layer
+    autoencoder.add(Conv2D(128, (3, 3), padding='same'))  # fourth conv layer
     autoencoder.add(BatchNormalization())
     autoencoder.add(LeakyReLU(alpha=0.1))
     autoencoder.add(MaxPooling2D((2, 2), padding='same'))
@@ -31,30 +31,28 @@ def get_model():
     autoencoder.add(Conv2D(4, (1, 1), padding='same'))  # sixth conv layer
     autoencoder.add(BatchNormalization())
     autoencoder.add(LeakyReLU(alpha=0.1))
-    autoencoder.add(MaxPooling2D((2, 2), padding='same'))
     autoencoder.add(Flatten())  # resulting size: (None, 1024)
     autoencoder.add(Reshape((16, 16, 4)))
     autoencoder.add(Conv2D(4, (1, 1), padding='same'))  # -sixth conv layer
     autoencoder.add(BatchNormalization())
     autoencoder.add(LeakyReLU(alpha=0.1))
-    autoencoder.add(UpSampling2D((2, 2)))
     autoencoder.add(Conv2D(64, (3, 3), padding='same'))  # -fifth conv layer
     autoencoder.add(BatchNormalization())
     autoencoder.add(LeakyReLU(alpha=0.1))
+    autoencoder.add(Conv2D(128, (3, 3), padding='same'))  # -fourth conv layer
     autoencoder.add(UpSampling2D((2, 2)))
-    autoencoder.add(Conv2D(256, (3, 3), padding='same'))  # -fourth conv layer
     autoencoder.add(BatchNormalization())
     autoencoder.add(LeakyReLU(alpha=0.1))
-    autoencoder.add(UpSampling2D((2, 2)))
     autoencoder.add(Conv2D(256, (3, 3), padding='same'))  # -third conv layer
+    autoencoder.add(UpSampling2D((2, 2)))
     autoencoder.add(BatchNormalization())
     autoencoder.add(LeakyReLU(alpha=0.1))
-    autoencoder.add(UpSampling2D((2, 2)))
     autoencoder.add(Conv2D(128, (5, 5), padding='same'))  # -second conv layer
+    autoencoder.add(UpSampling2D((2, 2)))
     autoencoder.add(BatchNormalization())
     autoencoder.add(LeakyReLU(alpha=0.1))
-    autoencoder.add(UpSampling2D((2, 2)))
     autoencoder.add(Conv2D(64, (7, 7), padding='same'))  # -first conv layer
+    autoencoder.add(UpSampling2D((2, 2)))
     autoencoder.add(BatchNormalization())
     autoencoder.add(LeakyReLU(alpha=0.1))
     # 1x1 conv to reduce channels to bring into input image shape

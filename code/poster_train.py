@@ -10,6 +10,8 @@ from keras.models import Model, load_model
 from keras.optimizers import Adam
 from keras_preprocessing.image import ImageDataGenerator
 from PIL import Image
+import tensorflow as tf
+from keras import backend as K
 
 from poster_model import get_model
 
@@ -89,16 +91,16 @@ def train_model(data_file, batch_size, epochs, val_proportion,
                                                         batch_size=batch_size)
     STEP_SIZE_TRAIN = train_generator.n // train_generator.batch_size
     STEP_SIZE_VAL = val_generator.n // val_generator.batch_size
-    
+    STEP_SIZE_TEST = test_generator.n // test_generator.batch_size
     
     # Get the model
     model, encoder_output = get_model()
     
     # Setup early stopping
-    early_stopper_cb = EarlyStopping(monitor='val_loss', patience=3, verbose=1)
+    early_stopper_cb = EarlyStopping(monitor='val_loss', patience=10, verbose=1)
     
     # Setup model checkpointing
-    chkpt = save_dir + 'AutoEncoder_poster_weights.{epoch:02d}-{loss:.2f}-{val_loss:.2f}.hdf5'
+    chkpt = save_dir + 'AutoEncoder_poster_weights.{epoch:02d}-{loss:.3f}-{val_loss:.3f}.hdf5'
     checkpoint_cb = ModelCheckpoint(filepath = chkpt, monitor='val_loss', 
                                     verbose=1, save_best_only=True, mode='auto')
     
@@ -112,7 +114,12 @@ def train_model(data_file, batch_size, epochs, val_proportion,
                                   validation_steps=STEP_SIZE_VAL,
                                   epochs=epochs, verbose=1,
                                   callbacks=[early_stopper_cb, checkpoint_cb])
-    pass
+    
+    # Test the model
+    score = model.evaluate_generator(generator=test_generator,
+                                     steps=STEP_SIZE_TEST,
+                                     verbose=1)
+    print('Score:\n', score)
 
    
 if __name__ == "__main__":
@@ -120,12 +127,17 @@ if __name__ == "__main__":
     data_file = '../data/posters/poster.txt'
     test_proportion = 0.15
     val_proportion = 0.1
-    batch_size = 32
-    epochs = 1
+    batch_size = 2
+    epochs = 150
     optimizer = 'adam'
     loss = 'mean_squared_error'
     save_dir = '../weights/'
-    image_size = 512
+    image_size = 256
+    
+    session_conf = tf.ConfigProto()
+    session_conf.gpu_options.allow_growth=True
+    session = tf.Session(graph=tf.get_default_graph(), config=session_conf)
+    K.set_session(session)
     
     # Train the model
     train_model(data_file, batch_size, epochs, val_proportion, test_proportion,
