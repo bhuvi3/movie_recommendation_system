@@ -6,6 +6,23 @@ Number of ratings: 26024289
 Number of unique users: 270896, range: [1, 270896]
 Number of unique movies: 45115, range: [1, 176275]
 The ratings sparse matrix has been saved in ../data/ratings_mat.pickle
+
+# 2. Relabel
+New ratings mat is saved at ../data/ratings_mat.pickle
+Original to New item ids map is saved at ../data/orig_to_new_relabel_map.pickle
+New to Original item ids map is saved at ../data/new_to_orig_relabel_map.pickle
+
+# 3. Train, Val, Test data split.
+train_size: 24723075
+val_size: 650607
+test_size: 650607
+Setting the random seed to 0
+train ratings sparse matrix has been saved in ../data/ratings_mat_train.pickle
+val ratings sparse matrix has been saved in ../data/ratings_mat_val.pickle
+train_val ratings sparse matrix has been saved in ../data/ratings_mat_train_val.pickle
+test ratings sparse matrix has been saved in ../data/ratings_mat_test.pickle
+
+# Old
 train_size: 15614574
 val_size: 3903643
 test_size: 6506072
