@@ -167,7 +167,7 @@ class CollaborativeFiltering(object):
 
 
     def item_item_cf_predict(self, user_id, item_id):
-        nearest_items = self.get_k_nearest_items(user_id, item_id)
+        nearest_items = self._get_k_nearest_items(user_id, item_id)
 
         weighted_sum = 0
         similarity_sum = 0
@@ -189,7 +189,7 @@ class CollaborativeFiltering(object):
 
 
     def user_user_cf_predict(self, user_id, item_id):
-        nearest_users = self.get_k_nearest_users(user_id, item_id)
+        nearest_users = self._get_k_nearest_users(user_id, item_id)
 
         weighted_sum = 0
         similarity_sum = 0
@@ -208,3 +208,20 @@ class CollaborativeFiltering(object):
         b_xi = self._get_bias_term(user_id, item_id)
         r_xi = b_xi + (weighted_sum / similarity_sum)
         return r_xi
+
+
+class LatentFactorModel(object):
+    """
+    Latent Factor model.
+
+    Params:
+    ratings_mat: A sparse matrix containing the ratings with format:
+    {'user_id': {'item_id': rating, ...}, ...}.
+
+    k: The 'k' nearest neighbours to be considered. Default: all.
+
+    """
+    def __init__(self, ratings_mat, similarity_func, k=10):
+        self.ratings_mat = ratings_mat
+        self.k = k
+        self.get_sim_score = similarity_func
