@@ -8,7 +8,7 @@ from sklearn.metrics import roc_auc_score
 from utils import PredictionHandler
 
 
-class PerformanceMeasurer(object):
+class PerformanceAnalyzer(object):
     
     def __init__(self, prediction_handler: PredictionHandler, metric_name: str, **kwargs):
         self._prediction_handler = prediction_handler
@@ -92,7 +92,7 @@ if __name__ == "__main__":
     scores = {}
     
     for metric in metrics:
-        scorer = PerformanceMeasurer(predictions_handler,
+        scorer = PerformanceAnalyzer(predictions_handler,
                                      metric_name=metric, threshold=threshold)
         scores[metric] = scorer.get_scores()
     
