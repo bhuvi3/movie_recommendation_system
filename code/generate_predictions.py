@@ -1,4 +1,5 @@
 import pickle
+from copy import deepcopy
 
 import numpy as np
 import pandas as pd
@@ -20,14 +21,8 @@ def cf_item_model():
     return model_name, cfm
 
 
-def get_predictions(model_configs, data):
+def get_predictions(models, data):
     predictions = []
-    models = []
-    
-    # Acquire and initialize the models
-    for model_cfg in model_configs:
-        models.append(model_cfg())
-        print('Initialized model ' + models[-1][0])
         
     # Acquire the prediction on each model for each data point
     for data_pt in data:
@@ -53,8 +48,14 @@ def generate_predictions(model_configs, data, output_csv_file,
     indices = np.arange(len(data), dtype=int)
     split_indices = np.array_split(indices, n_splits)
     
+    # Acquire and initialize the models
+    models = []
+    for model_cfg in model_configs:
+        models.append(model_cfg())
+        print('Initialized model ' + models[-1][0])
+    
     # Launch get_predictions in parallel for each split
-    predictions = Parallel(n_jobs=n_jobs)(delayed(get_predictions)(model_configs,
+    predictions = Parallel(n_jobs=n_jobs)(delayed(get_predictions)(deepcopy(models),
                                                                    data[split_idx])
                                           for split_idx in split_indices)
     
@@ -98,7 +99,7 @@ def main():
     
     model_configs = [cf_item_model]
     n_splits = 4
-    n_jobs = 4
+    n_jobs = 2
     output_csv_file = '../data/test_predictions.csv'
     output_pickle_file = '../data/test_predictions_handler.pickle'
     
