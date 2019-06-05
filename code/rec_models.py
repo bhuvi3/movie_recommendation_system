@@ -355,6 +355,10 @@ class LatentFactorModel(object):
         self._build_bias_terms()
         self.rating_triples = self._get_triples_list()
 
+        # Adjust for gaps in the user_ids and item_ids.
+        self.user_avg_dict = defaultdict(int, self.user_avg_dict)
+        self.item_avg_dict = defaultdict(int, self.item_avg_dict)
+
         Q = np.random.uniform(0, np.sqrt(self.max_rating / self.k), size=(self.max_item_id + 1, self.k))
         P = np.random.uniform(0, np.sqrt(self.max_rating / self.k), size=(self.max_user_id + 1, self.k))
         Bx = np.array([self.user_avg_dict[user_id] - self.mu for user_id in range(self.max_user_id + 1)])
