@@ -257,3 +257,22 @@ def get_ratings_mat_train_val_test_split(ratings_mat_pickle_file, outfile_prefix
 
         print("%s ratings sparse matrix has been saved in %s" % (cur_split_name, outfile))
 
+
+class PredictionHandler(object):
+    def __init__(self, ground_truth):
+        self._predictions = {'ground_truth': ground_truth}
+        self._num_preds = len(ground_truth)
+        
+    def add_prediction(self, model_name, predictions):
+        if len(predictions) != self._num_preds:
+            raise "Number of predictions different from the ground truth."
+        self._predictions[model_name] = predictions
+    
+    def get_models_list(self):
+        return list(self._predictions.keys())
+    
+    def get_predictions(self, model_name=None):
+        if model_name and model_name in self._predictions:
+            return self._predictions[model_name]
+        else:
+            return self._predictions
