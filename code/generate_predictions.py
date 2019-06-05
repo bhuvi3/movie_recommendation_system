@@ -21,8 +21,15 @@ def cf_item_model():
     return model_name, cfm
 
 
-def get_predictions(models, data):
+def get_predictions(model_configs, data):
+    print('Predictor started..')
     predictions = []
+    
+    # Acquire and initialize the models
+    models = []
+    for model_cfg in model_configs:
+        models.append(model_cfg())
+        print('Initialized model ' + models[-1][0])
         
     # Acquire the prediction on each model for each data point
     for data_pt in data:
@@ -33,12 +40,12 @@ def get_predictions(models, data):
         
         for model_name, model in models:
             y_pred = model.predict(u_id, m_id)
-            y_pred = max(y_pred, 5)
-            y_pred = min(y_pred, 0.5)
+            y_pred = min(y_pred, 5)
+            y_pred = max(y_pred, 0.5)
             result[model_name] = y_pred
         
         predictions.append(result)
-    
+    print('Predictor completed.')
     return predictions
 
 
@@ -48,18 +55,13 @@ def generate_predictions(model_configs, data, output_csv_file,
     indices = np.arange(len(data), dtype=int)
     split_indices = np.array_split(indices, n_splits)
     
-    # Acquire and initialize the models
-    models = []
-    for model_cfg in model_configs:
-        models.append(model_cfg())
-        print('Initialized model ' + models[-1][0])
-    
     # Launch get_predictions in parallel for each split
-    predictions = Parallel(n_jobs=n_jobs)(delayed(get_predictions)(deepcopy(models),
+    predictions = Parallel(n_jobs=n_jobs)(delayed(get_predictions)(deepcopy(model_configs),
                                                                    data[split_idx])
                                           for split_idx in split_indices)
     
     # Save the predictions to csv
+    predictions = list(np.ravel(predictions))
     df = pd.DataFrame.from_dict(predictions)
     df.to_csv(output_csv_file)
     
@@ -98,8 +100,8 @@ def main():
     data = read_and_flatten_dict(test_data_file)
     
     model_configs = [cf_item_model]
-    n_splits = 4
-    n_jobs = 2
+    n_splits = 3
+    n_jobs = 3
     output_csv_file = '../data/test_predictions.csv'
     output_pickle_file = '../data/test_predictions_handler.pickle'
     

@@ -18,7 +18,8 @@ class PerformanceAnalyzer(object):
         self._metric_name = metric_name
         self._kwargs = kwargs
         self._ground_truth_label = 'ground_truth'
-        self._model_names = self._prediction_handler.get_models_list().remove(self._ground_truth_label)
+        self._model_names = self._prediction_handler.get_models_list()
+        self._model_names.remove(self._ground_truth_label)
         
     
     def _euclidean_score(self, y_true, y_pred):
