@@ -197,7 +197,47 @@ def create_ratings_matrix(ratings_file, outfile, sep=','):
     print("The ratings sparse matrix has been saved in %s" % outfile)
 
 
-def get_ratings_mat_train_val_test_split(ratings_mat_pickle_file, outfile_prefix, val_split=0.15, test_split=0.25, random_state=None):
+def relabel_item_ids(ratings_mat_orig_pickle_file, new_rating_mat_outfile, orig_to_new_relabel_map_outfile, new_to_orig_relabel_map_outfile):
+    """
+    Relabels the item ids to keep them consecutive in the ratings matrix and writes
+    the relabelled ratings mat to new_rating_mat_outfile, and also saves the relabel_maps.
+
+    """
+    with open(ratings_mat_orig_pickle_file, "rb") as fp:
+        ratings_mat_orig = pickle.load(fp)
+
+    orig_to_new_relabel_map = {}
+    k = 0
+    for user_id, item_ratings_dict in ratings_mat_orig.items():
+        for item_id in item_ratings_dict.keys():
+            if item_id not in orig_to_new_relabel_map:
+                orig_to_new_relabel_map[item_id] = k
+                k += 1
+
+    new_to_orig_relabel_map = dict([[v, k] for k, v in orig_to_new_relabel_map.items()])
+
+    # Apply relabels.
+    new_ratings_mat = defaultdict(dict)
+    for user_id, item_ratings_dict in ratings_mat_orig.items():
+        for item_id, rating in item_ratings_dict.items():
+            new_ratings_mat[user_id][orig_to_new_relabel_map[item_id]] = rating
+
+    # Save the files.
+    with open(new_rating_mat_outfile, "wb") as out_fp:
+        pickle.dump(new_ratings_mat, out_fp)
+        print("New ratings mat is saved at %s" % new_rating_mat_outfile)
+
+    with open(orig_to_new_relabel_map_outfile, "wb") as out_fp:
+        pickle.dump(orig_to_new_relabel_map, out_fp)
+        print("Original to New item ids map is saved at %s" % orig_to_new_relabel_map_outfile)
+
+    with open(new_to_orig_relabel_map_outfile, "wb") as out_fp:
+        pickle.dump(new_to_orig_relabel_map, out_fp)
+        print("New to Original item ids map is saved at %s" % new_to_orig_relabel_map_outfile)
+
+
+
+def get_ratings_mat_train_val_test_split(ratings_mat_pickle_file, outfile_prefix, val_split=0.005, test_split=0.005, random_state=None):
     """
     Creates the train, val and test split of the ratings matrix, and writes them
     to in the path referred by outfile_prefix as
