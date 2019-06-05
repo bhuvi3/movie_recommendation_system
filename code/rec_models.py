@@ -64,11 +64,14 @@ class CollaborativeFiltering(object):
 
     k: The 'k' nearest neighbours to be considered. Default: all.
 
+    type: The type of CollaborativeFiltering. Available Types: ['item-item', 'user-user'].
+
     """
-    def __init__(self, ratings_mat, similarity_func, k=10):
+    def __init__(self, ratings_mat, similarity_func, k=10, type='item-item'):
         self.ratings_mat = ratings_mat
         self.k = k
         self.get_sim_score = similarity_func
+        self.type = type
 
 
     def _build_inv_ratings_mat(self):
@@ -212,6 +215,15 @@ class CollaborativeFiltering(object):
         return r_xi
 
 
+    def predict(self, user_id, item_id):
+        if self.type == 'user-user':
+            return self.user_user_cf_predict(user_id, item_id)
+        elif self.type == 'item-item':
+            return self.item_item_cf_predict(user_id, item_id)
+        else:
+            ValueError("The given type is not allowed: %s" % self.type)
+
+
 class LatentFactorModel(object):
     """
     Latent Factor model using Stochastic Gradient Descent (SGD) with bias terms.
@@ -284,11 +296,6 @@ class LatentFactorModel(object):
         self.item_avg_dict = {}
         for item_id, rat_sum in item_rat_sum.items():
             self.item_avg_dict[item_id] = rat_sum / item_rat_count[item_id]
-
-        # XXX: Adjusts user id starting from 1.
-        print("Adjusting user id 0, as it starts from 1.")
-        if 0 not in self.user_avg_dict:
-            self.user_avg_dict = {0: 0}
 
 
     def _get_triples_list(self):
