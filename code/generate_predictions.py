@@ -21,6 +21,28 @@ def cf_item_model():
     return model_name, cfm
 
 
+def cf_user_model():
+    ratings_train_file = '../data/ratings_mat_train.pickle'
+    model_name = 'CF_User'
+    
+    with open(ratings_train_file, "rb") as fp:
+        ratings_mat_val = pickle.load(fp)
+    cfm = CollaborativeFiltering(ratings_mat_val, pearson_similarity, 
+                                 type='user-user')
+    cfm.fit()
+    return model_name, cfm
+
+
+def lfm_model():
+    trained_lfm_path = "../data/trained_lfm.pickle"
+    model_name = 'LFM'
+    
+    with open(trained_lfm_path, "rb") as fp:
+        lfm = pickle.load(fp)
+
+    return model_name, lfm
+
+
 def get_predictions(model_configs, data, instance_idx):
     print('Predictor started..')
     predictions = []
@@ -52,7 +74,7 @@ def get_predictions(model_configs, data, instance_idx):
             # Save the predictions to temporary csv
             predictions_temp = list(np.ravel(predictions))
             df = pd.DataFrame.from_dict(predictions_temp).dropna()
-            df.to_csv('../data/temp/predictions_temp_test_instance_%d_%d.csv' 
+            df.to_csv('../data/temp/predictions_temp_val_instance_%d_%d.csv' 
                       % (instance_idx,idx), index=False)
     
         
@@ -109,14 +131,14 @@ def read_and_flatten_dict(data_file):
 
 
 def main():
-    test_data_file = '../data/ratings_mat_test.pickle'
-    data = read_and_flatten_dict(test_data_file)[:3002]
+    test_data_file = '../data/ratings_mat_val.pickle'
+    data = read_and_flatten_dict(test_data_file)
     
-    model_configs = [cf_item_model]
+    model_configs = [cf_user_model]
     n_splits = 2
     n_jobs = 2
-    output_csv_file = '../data/test_predictions.csv'
-    output_pickle_file = '../data/test_predictions_handler.pickle'
+    output_csv_file = '../data/val_predictions.csv'
+    output_pickle_file = '../data/val_predictions_handler.pickle'
     
     generate_predictions(model_configs, data, output_csv_file,
                          output_pickle_file, n_splits, n_jobs)

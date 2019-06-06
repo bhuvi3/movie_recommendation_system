@@ -2,6 +2,7 @@ data/*
 code/.ipynb_checkpoints/*
 *.pyc
 *.npy
+*.pickle
 .vscode/*
 code/.vscode/*
 code/misc/.ipynb_checkpoints/*
