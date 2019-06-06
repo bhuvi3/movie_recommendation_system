@@ -21,7 +21,7 @@ def cf_item_model():
     return model_name, cfm
 
 
-def get_predictions(model_configs, data):
+def get_predictions(model_configs, data, instance_idx):
     print('Predictor started..')
     predictions = []
     
@@ -32,19 +32,30 @@ def get_predictions(model_configs, data):
         print('Initialized model ' + models[-1][0])
         
     # Acquire the prediction on each model for each data point
-    for data_pt in data:
+    for idx, data_pt in enumerate(data):
         u_id = data_pt['user_id']
         m_id = data_pt['movie_id']
         y_true = data_pt['y_true']
         result = {'user_id': u_id, 'movie_id': m_id, 'y_true':y_true}
+        try:
+            for model_name, model in models:
+                y_pred = model.predict(u_id, m_id)
+                y_pred = min(y_pred, 5)
+                y_pred = max(y_pred, 0.5)
+                result[model_name] = y_pred
+            
+            predictions.append(result)
+        except:
+            continue
         
-        for model_name, model in models:
-            y_pred = model.predict(u_id, m_id)
-            y_pred = min(y_pred, 5)
-            y_pred = max(y_pred, 0.5)
-            result[model_name] = y_pred
+        if idx % 1000 == 0:
+            # Save the predictions to temporary csv
+            predictions_temp = list(np.ravel(predictions))
+            df = pd.DataFrame.from_dict(predictions_temp).dropna()
+            df.to_csv('../data/temp/predictions_temp_test_instance_%d_%d.csv' 
+                      % (instance_idx,idx), index=False)
+    
         
-        predictions.append(result)
     print('Predictor completed.')
     return predictions
 
@@ -57,13 +68,15 @@ def generate_predictions(model_configs, data, output_csv_file,
     
     # Launch get_predictions in parallel for each split
     predictions = Parallel(n_jobs=n_jobs)(delayed(get_predictions)(deepcopy(model_configs),
-                                                                   data[split_idx])
-                                          for split_idx in split_indices)
+                                                                   data[split_idx],
+                                                                   instance_idx)
+                                          for instance_idx, split_idx 
+                                          in enumerate(split_indices))
     
     # Save the predictions to csv
     predictions = list(np.ravel(predictions))
-    df = pd.DataFrame.from_dict(predictions)
-    df.to_csv(output_csv_file)
+    df = pd.DataFrame.from_dict(predictions).dropna()
+    df.to_csv(output_csv_file, index=False)
     
     # Create an instance of PredictionHandler and move data to the object
     y_true = np.array(df['y_true'].values)
@@ -97,11 +110,11 @@ def read_and_flatten_dict(data_file):
 
 def main():
     test_data_file = '../data/ratings_mat_test.pickle'
-    data = read_and_flatten_dict(test_data_file)
+    data = read_and_flatten_dict(test_data_file)[:3002]
     
     model_configs = [cf_item_model]
-    n_splits = 3
-    n_jobs = 3
+    n_splits = 2
+    n_jobs = 2
     output_csv_file = '../data/test_predictions.csv'
     output_pickle_file = '../data/test_predictions_handler.pickle'
     
