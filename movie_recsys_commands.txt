@@ -1,0 +1,18 @@
+
+#----------------------
+# CF-U - val
+scp -i parallel_LR.pem -r /home/bhuvan/Projects/movie_recommendation_system/movie_recsys ubuntu@ec2-18-191-225-39.us-east-2.compute.amazonaws.com:~/
+
+
+screen -S cfu-val
+python generate_predictions_val_cf-u.py
+
+
+
+
+#----------------------
+# CF-U - test
+scp -i parallel_LR.pem -r /home/bhuvan/Projects/movie_recommendation_system/movie_recsys ubuntu@ec2-18-222-119-60.us-east-2.compute.amazonaws.com:~/
+
+screen -S cfu-test
+python generate_predictions_test_cf-u.py
