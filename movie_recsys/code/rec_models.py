@@ -427,3 +427,98 @@ class LatentFactorModel(object):
 
         pred_rating = mu + b_x + b_i + np.dot(q_i, p_x)
         return pred_rating
+
+
+# Content based models.
+
+#movie_id has to be str
+#plot_embedding accesses embeddings as str(movie_id)
+def cosine_similarity_items(user_profile, movie_embedding, movie_id):
+    'Finds cosine similarity between two vectors. The vectors\
+    here refer to the word embeddings of movies.'
+
+    query_movie_id = movie_embedding[movie_id].reshape(-1, 1)
+    user_profile_avg = 0
+    sum_movie_ratings = 0
+    for user_movie_id, movie_id_rating in user_profile.items():
+        try:
+            current_movie = movie_embedding[user_movie_id].reshape(-1, 1)
+        except:
+            continue
+
+        user_profile_avg = user_profile_avg + current_movie * movie_id_rating
+        sum_movie_ratings+=movie_id_rating
+        
+    user_profile_avg = user_profile_avg/sum_movie_ratings
+    cos_sim = np.dot(query_movie_id.T, user_profile_avg)/(np.linalg.norm(query_movie_id) * np.linalg.norm(user_profile_avg))
+    
+    return(cos_sim[0][0]*5)
+
+
+def euclidean_dist(user_profile, poster_embedding, movie_id):
+    query_movie_id = poster_embedding[movie_id].reshape(-1, 1)
+
+    user_profile_avg = np.zeros(shape = (query_movie_id.shape[0], 1))
+    sum_movie_ratings = 0
+    for user_movie_id, movie_id_rating in user_profile.items():
+        try:
+            current_movie = poster_embedding[user_movie_id].reshape(-1, 1)
+        except:
+            continue
+
+        user_profile_avg = user_profile_avg + current_movie * movie_id_rating
+
+        sum_movie_ratings+=movie_id_rating
+    user_profile_avg = user_profile_avg/sum_movie_ratings
+
+    
+
+    sim = 1 - (np.linalg.norm(user_profile_avg - query_movie_id)/43.409295338834916)
+    
+    return(sim*5)
+
+
+
+class ContentBased(object):
+
+    def __init__(self, ratings_mat, movie_embedding=None, poster_embedding=None, metadata_mat=None, type_model='poster'):
+
+        self.ratings_mat = ratings_mat
+        self.movie_embedding = movie_embedding
+        self.poster_embedding = poster_embedding
+        self.metadata = metadata_mat
+        self.type_model = type_model
+
+        if self.type_model == 'poster':
+            self.predict_func = self._predict_poster
+        elif self.type_model == 'plot':
+            self.predict_func = self._predict_plot
+        elif self.type_model == 'metadata':
+            self.predict_func = self._predict_metadata
+        else:
+            raise ValueError("The given type_model is not supported.")
+
+
+    def predict(self, user_id, movie_id):
+        return self.predict_func(user_id, movie_id)
+
+
+    def _predict_plot(self, user_id, movie_id):
+        user_movie_profile = self.ratings_mat[user_id]
+        rating_user_item = cosine_similarity_items(user_movie_profile, self.movie_embedding, movie_id)
+
+        return(rating_user_item)
+
+
+    def _predict_metadata(self, user_id, movie_id):
+        user_movie_profile = self.ratings_mat[user_id]
+        rating_user_item = cosine_similarity_items(user_movie_profile, self.metadata, movie_id)
+
+        return(rating_user_item)
+
+
+    def _predict_poster(self, user_id, movie_id):
+        user_movie_profile = self.ratings_mat[user_id]
+        rating_user_item = euclidean_dist(user_movie_profile, self.poster_embedding, movie_id)
+
+        return(rating_user_item)
