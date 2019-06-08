@@ -453,7 +453,7 @@ def cosine_similarity_items(user_profile, movie_embedding, movie_id):
     cos_sim = np.dot(query_movie_id.T, user_profile_avg)/(np.linalg.norm(query_movie_id) * np.linalg.norm(user_profile_avg))
     
     return(cos_sim[0][0]*5)
-
+generate_predictions_cb_test.py
 
 def euclidean_dist(user_profile, poster_embedding, movie_id):
     query_movie_id = poster_embedding[movie_id].reshape(-1, 1)

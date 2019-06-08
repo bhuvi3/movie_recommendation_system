@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 from joblib import Parallel, delayed
 
-from rec_models import CollaborativeFiltering, pearson_similarity
+from rec_models import CollaborativeFiltering, ContentBased, pearson_similarity
 from utils import PredictionHandler
 
 import os
@@ -161,7 +161,7 @@ def read_and_flatten_dict(data_file):
 def main():
     dataset_name = "val"
     write_freq = 5000
-    n_jobs = 32
+    n_jobs = 16
     model_configs = [content_model_plots, content_model_posters]
 
     # Running the inference pipeline with above params.
