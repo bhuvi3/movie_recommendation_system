@@ -46,27 +46,39 @@ def lfm_model():
 
 
 def content_model_plots():
-    with open('../data/new_movieid_plots.pickle','rb') as f:
+    with open('../data/plot_encodings.pickle','rb') as f:
         plots = pickle.load(f)
 
     with open('../data/ratings_mat_train.pickle','rb') as f:
         mat = pickle.load(f)
 
-    cb = ContentBased(ratings_mat=mat, movie_embedding=plots, type_mode='plot')
+    cb = ContentBased(ratings_mat=mat, movie_embedding=plots, type_model='plot')
 
-    return cb
+    return "CB_Plot", cb
 
 
 def content_model_posters():
-    with open('../data/orig_to_new_poster_encodings.pickle','rb') as f:
+    with open('../data/poster_encodings.pickle','rb') as f:
         posters = pickle.load(f)
 
     with open('../data/ratings_mat_train.pickle','rb') as f:
         mat = pickle.load(f)
 
-    cb = ContentBased(ratings_mat=mat, poster_embedding=posters, type_mode='poster')
+    cb = ContentBased(ratings_mat=mat, poster_embedding=posters, type_model='poster')
 
-    return cb
+    return "CB_Poster", cb
+
+
+def content_model_metadata():
+    with open('../data/metadata_encodings.pickle','rb') as f:
+        metadata = pickle.load(f)
+
+    with open('../data/ratings_mat_train.pickle','rb') as f:
+        mat = pickle.load(f)
+
+    cb = ContentBased(ratings_mat=mat, metadata_embedding=metadata, type_model='metadata')
+
+    return "CB_Metadata", cb
 
 
 def get_predictions(model_configs, data, instance_idx, outdir, write_freq):
@@ -161,11 +173,11 @@ def read_and_flatten_dict(data_file):
 def main():
     dataset_name = "val"
     write_freq = 5000
-    n_jobs = 16
-    model_configs = [content_model_plots, content_model_posters]
+    n_jobs = 4
+    model_configs = [content_model_plots, content_model_posters, content_model_metadata]
 
     # Running the inference pipeline with above params.
-    temp_outputs_dir = "../data/CB_PlotPoster_%s_temp_preds" % dataset_name
+    temp_outputs_dir = "../data/CB_PlotPosterMetadata_%s_temp_preds" % dataset_name
     os.makedirs(temp_outputs_dir)
     print("Creating temp outputs at %s" % temp_outputs_dir)
 
