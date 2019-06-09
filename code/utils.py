@@ -316,3 +316,17 @@ class PredictionHandler(object):
             return self._predictions[model_name]
         else:
             return self._predictions
+
+
+def df_to_prediction_handler(df):
+    y_true = np.array(df['y_true'].values)
+    predicted_df = df.drop(columns=['user_id', 'movie_id', 'y_true'])
+    columns = predicted_df.columns
+    
+    prediction_handler = PredictionHandler(ground_truth=y_true)
+    for model_name in columns:
+        prediction_handler.add_prediction(model_name, 
+                                          np.array(df[model_name].values))
+        
+    return prediction_handler
+        
