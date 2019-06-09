@@ -45,7 +45,7 @@ class PerformanceAnalyzer(object):
         y_true = self._prediction_handler.get_predictions(self._ground_truth_label)
         
         for roc_threshold in self._roc_thresholds:
-            metric_name = 'roc_auc_at_' + str(roc_threshold)
+            metric_name = 'ROC_AUC @ ' + str(roc_threshold)
             score_metric = {}
             for model in self._model_names:
                 score_metric[model] = self._roc_at_threshold(y_true, 
@@ -54,7 +54,7 @@ class PerformanceAnalyzer(object):
             scores[metric_name] = score_metric
             
         for rmse_threshold in self._rmse_thresholds:
-            metric_name = 'rmse_at_' + str(rmse_threshold)
+            metric_name = 'RMSE @ ' + str(rmse_threshold)
             score_metric = {}
             for model in self._model_names:
                 score_metric[model] = self._rmse_at_threshold(y_true, 
