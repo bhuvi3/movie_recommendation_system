@@ -3,6 +3,7 @@ code/.ipynb_checkpoints/*
 *.pyc
 *.npy
 *.pickle
+*.zip
 .vscode/*
 code/.vscode/*
 code/misc/.ipynb_checkpoints/*
