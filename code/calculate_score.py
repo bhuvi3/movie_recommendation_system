@@ -84,6 +84,7 @@ class PerformanceAnalyzer(object):
         plt.legend(loc="lower right")
         plt.savefig(output_file)
     
+    
     def get_models_list(self):
         return self._model_names
     
