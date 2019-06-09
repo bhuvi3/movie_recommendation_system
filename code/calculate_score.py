@@ -1,35 +1,32 @@
-import argparse
-import pickle
+from math import sqrt
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from sklearn.metrics import roc_auc_score
+from sklearn.metrics import mean_squared_error, roc_auc_score, roc_curve
 
 from utils import PredictionHandler
 
 
 class PerformanceAnalyzer(object):
     
-    def __init__(self, prediction_handler: PredictionHandler, metric_name: str, **kwargs):
+    def __init__(self, prediction_handler: PredictionHandler, 
+                 roc_thresholds=[3], rmse_thresholds=[0]):
         self._prediction_handler = prediction_handler
-        self._valid_metrics = ['euclidean', 'roc']
-        if metric_name not in self._valid_metrics:
-            raise "Unknown metric: " + metric_name
-        self._metric_name = metric_name
-        self._kwargs = kwargs
         self._ground_truth_label = 'ground_truth'
         self._model_names = self._prediction_handler.get_models_list()
         self._model_names.remove(self._ground_truth_label)
-        
-    
-    def _euclidean_score(self, y_true, y_pred):
-        return np.sqrt(np.sum(np.square(y_pred - y_true)))
+        self._roc_thresholds = roc_thresholds
+        self._rmse_thresholds = rmse_thresholds
     
     
-    def _roc_auc_score(self, y_true, y_pred):
-        threshold = 3
-        if 'threshold' in self._kwargs:
-            threshold = self._kwargs['threshold']
+    def _rmse_at_threshold(self, y_true, y_pred, threshold):
+        indices = y_true >= threshold
+        rmse = sqrt(mean_squared_error(y_true[indices], y_pred[indices]))
+        return rmse
+    
+    
+    def _roc_at_threshold(self, y_true, y_pred, threshold):
         
         # Threshold ground truth ratings
         y_true_thresh = np.where(y_true >= threshold, 1, 0)
@@ -44,59 +41,49 @@ class PerformanceAnalyzer(object):
     
     
     def get_scores(self):
-        if self._metric_name == 'euclidean':
-            metric = self._euclidean_score
-        else:
-            metric = self._roc_auc_score
-            
         scores = {}
         y_true = self._prediction_handler.get_predictions(self._ground_truth_label)
         
-        for model_name in self._model_names:
-            scores[model_name] = metric(y_true, 
-                                        self._prediction_handler.get_predictions(model_name))
+        for roc_threshold in self._roc_thresholds:
+            metric_name = 'roc_auc_at_' + str(roc_threshold)
+            score_metric = {}
+            for model in self._model_names:
+                score_metric[model] = self._roc_at_threshold(y_true, 
+                                                             self._prediction_handler.get_predictions(model), 
+                                                             roc_threshold)
+            scores[metric_name] = score_metric
+            
+        for rmse_threshold in self._rmse_thresholds:
+            metric_name = 'rmse_at_' + str(rmse_threshold)
+            score_metric = {}
+            for model in self._model_names:
+                score_metric[model] = self._rmse_at_threshold(y_true, 
+                                                              self._prediction_handler.get_predictions(model), 
+                                                              rmse_threshold)
+            scores[metric_name] = score_metric
+        
         return scores
     
+    
+    def plot_roc_at_threshold(self, output_file, threshold=3):
+        plt.rcParams['figure.figsize'] = [8, 8]
+        
+        # Threshold ground truth ratings
+        y_true = np.where(self._prediction_handler.get_predictions(self._ground_truth_label) >= threshold, 
+                          1, 0)
+        plt.plot([0, 1], [0, 1], 'k--')
+        for model in self._model_names:
+            y_pred = self._prediction_handler.get_predictions(model)
+            fpr, tpr, thresh = roc_curve(y_true, y_pred)
+            auc = roc_auc_score(y_true, y_pred)
+            plt.plot(fpr, tpr, label='%s ROC (area = %0.2f)' % (model, auc))
+            
+        plt.xlabel('Specificity (False Positive Rate)')
+        plt.ylabel('Sensitivity (True Positive Rate)')
+        plt.title('Receiver Operating Characteristic')
+        plt.legend(loc="lower right")
+        plt.savefig(output_file)
     
     def get_models_list(self):
         return self._model_names
     
-    
-def arg_parse():
-    """
-    Parse command line arguments passed to the module.
-
-    """
-    parser = argparse.ArgumentParser(description='Movie Recommendation System')
-
-    parser.add_argument("--prediction_file", 
-                        help="Path to the pickle file containing the predictions from all the models.",
-                        type=str, required=True)
-    parser.add_argument("--threshold", 
-                        help="Confidence to threshold ground truth ratings for ROC.", 
-                        default=3, type=float)
-    parser.add_argument("--output_file", 
-                        help="Path to the output csv file.",
-                        type=str, required=True)
-
-    return parser.parse_args()
-
-if __name__ == "__main__":
-    args = arg_parse()  # parse the command line arguments
-    
-    with open(args.prediction_file, "rb") as prediction_file:
-        predictions_handler = pickle.load(prediction_file)
-    
-    threshold = args.threshold
-    
-    metrics = ['euclidean', 'roc']
-    scores = {}
-    
-    for metric in metrics:
-        scorer = PerformanceAnalyzer(predictions_handler,
-                                     metric_name=metric, threshold=threshold)
-        scores[metric] = scorer.get_scores()
-    
-    df = pd.DataFrame.from_dict(scores)
-    print(df)
-    df.to_csv(args.output_file)
