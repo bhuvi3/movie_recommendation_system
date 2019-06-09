@@ -114,7 +114,6 @@ def get_predictions(model_configs, data, instance_idx, outdir, write_freq):
             df = pd.DataFrame.from_dict(predictions_temp).dropna()
             df.to_csv('%s/predictions_instance_%d_%d.csv'
                       % (outdir, instance_idx, idx), index=False)
-    
         
     print('Predictor completed.')
     return predictions
@@ -136,7 +135,7 @@ def generate_predictions(model_configs, data, output_csv_file,
                                           in enumerate(split_indices))
     
     # Save the predictions to csv
-    predictions = list(np.ravel(predictions))
+    predictions = list(np.concatenate(predictions).reshape(-1, ))
     df = pd.DataFrame.from_dict(predictions).dropna()
     df.to_csv(output_csv_file, index=False)
     
@@ -186,8 +185,8 @@ def main():
     print("Running inference on: %s" % test_data_file)
 
     n_splits = n_jobs
-    output_csv_file = '../data/%s_predictions.csv' % dataset_name
-    output_pickle_file = '../data/%s_predictions_handler.pickle' % dataset_name
+    output_csv_file = '../data/CB_%s_predictions.csv' % dataset_name
+    output_pickle_file = '../data/CB_%s_predictions_handler.pickle' % dataset_name
     
     generate_predictions(model_configs, data, output_csv_file, output_pickle_file, n_splits, n_jobs, temp_outputs_dir, write_freq)
 
