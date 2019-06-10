@@ -11,7 +11,7 @@ from utils import PredictionHandler
 class PerformanceAnalyzer(object):
     
     def __init__(self, prediction_handler: PredictionHandler, 
-                 roc_thresholds=[3], rmse_thresholds=[0]):
+                 roc_thresholds=[2.5], rmse_thresholds=[2.5]):
         self._prediction_handler = prediction_handler
         self._ground_truth_label = 'ground_truth'
         self._model_names = self._prediction_handler.get_models_list()
@@ -65,7 +65,7 @@ class PerformanceAnalyzer(object):
         return scores
     
     
-    def plot_roc_at_threshold(self, output_file, threshold=3):
+    def plot_roc_at_threshold(self, output_file, threshold=2.5):
         plt.rcParams['figure.figsize'] = [8, 8]
         
         # Threshold ground truth ratings
@@ -80,7 +80,7 @@ class PerformanceAnalyzer(object):
             
         plt.xlabel('Specificity (False Positive Rate)')
         plt.ylabel('Sensitivity (True Positive Rate)')
-        plt.title('Receiver Operating Characteristic')
+        plt.title('Receiver Operating Characteristic @', str(threshold))
         plt.legend(loc="lower right")
         plt.savefig(output_file)
     
