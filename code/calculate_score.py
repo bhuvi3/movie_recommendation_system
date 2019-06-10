@@ -80,11 +80,10 @@ class PerformanceAnalyzer(object):
             
         plt.xlabel('Specificity (False Positive Rate)')
         plt.ylabel('Sensitivity (True Positive Rate)')
-        plt.title('Receiver Operating Characteristic @', str(threshold))
+        plt.title('Receiver Operating Characteristic @ %s' % str(threshold))
         plt.legend(loc="lower right")
         plt.savefig(output_file)
     
     
     def get_models_list(self):
         return self._model_names
-    
