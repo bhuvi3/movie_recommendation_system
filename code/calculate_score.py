@@ -66,7 +66,7 @@ class PerformanceAnalyzer(object):
     
     
     def plot_roc_at_threshold(self, output_file, threshold=2.5):
-        plt.rcParams['figure.figsize'] = [8, 8]
+        plt.rcParams['figure.figsize'] = [12, 12]
         
         # Threshold ground truth ratings
         y_true = np.where(self._prediction_handler.get_predictions(self._ground_truth_label) >= threshold, 
@@ -77,7 +77,8 @@ class PerformanceAnalyzer(object):
             fpr, tpr, thresh = roc_curve(y_true, y_pred)
             auc = roc_auc_score(y_true, y_pred)
             plt.plot(fpr, tpr, label='%s ROC (area = %0.2f)' % (model, auc))
-            
+    
+
         plt.xlabel('Specificity (False Positive Rate)')
         plt.ylabel('Sensitivity (True Positive Rate)')
         plt.title('Receiver Operating Characteristic @ %s' % str(threshold))
